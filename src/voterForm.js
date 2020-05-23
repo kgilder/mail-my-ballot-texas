@@ -62,7 +62,19 @@ constructor(props) {
   }
 }
 
+
+function buildMail(form) {
+  var str = "mailto:dana.debeauvoir@traviscountytx.gov?subject=Request for Application for Ballot by Mail&body=";
+  str += "I am writing this email to request to request an application for ballot by mail for the upcoming election.%0D%0A%0D%0A";
+  str += "My name is Kenneth Gildersleeve and my home address is:%0D%0A";
+  str += "1300 Newning Ave Apt 207%0D%0A";
+  str += "Austin, TX 78704%0D%0A%0D%0A";
+  str += "Thank you very much,%0D%0AKenneth Gildersleeve%0D%0A";
+  window.open(str);
+}
+
 class VoterForm extends React.Component {
+
   render() {
     return (
       <div className="App">
@@ -70,7 +82,7 @@ class VoterForm extends React.Component {
           <Header />
         </div>
         <div className="Form">
-        <form>
+        <form action={buildMail(this)} method="get" enctype="text/plain">
           <TextInput label="First Name" />
           <TextInput label="Last Name" />
           <TextInput label="Street" />
