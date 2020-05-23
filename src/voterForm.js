@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from './TexasVoteFlag.png';
+import logo from './texas_imprint.png';
 import './voterForm.css';
 import './Logo.css';
 
