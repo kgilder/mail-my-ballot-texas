@@ -65,11 +65,11 @@ constructor(props) {
 }
 
 function importCountyElectionInformation(){
-  const excelToJson = require('convert-excel-to-json');
-  const result = excelToJson({
-    sourceFile: '/src/election-duties-1.xlsx'
-  });
-  console.log(result);
+  //const excelToJson = require('convert-excel-to-json');
+  //const result = excelToJson({
+  //  sourceFile: '/src/election-duties-1.xlsx'
+  //});
+  //console.log(result);
 }
 
 class VoterForm extends React.Component {
