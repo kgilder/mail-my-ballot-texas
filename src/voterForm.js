@@ -64,9 +64,29 @@ constructor(props) {
   }
 }
 
+//  const file = "https://www.sos.texas.gov/elections/forms/election-duties-1.xlsx";
+//  fetch(file, {mode: 'no-cors'}).then(function(response) {
+//    if (response.status !== 200) {
+//      console.log('Looks like there was a problem accessing ' + file + ', status code: ' + response.status);
+//      return;
+//    }
+//    return response.json();
+//  }).then(function(data){
+//    console.log(data);
+//  }).catch(console.log);
+function importCountyElectionInformation(){
+  const county_elections_info = "https://www.sos.texas.gov/elections/voter/county.shtml";
+  fetch(county_elections_info).then(function(response) {
+    return response.body;
+  }).then(function(html) {
+    console.log(html);
+  }).catch(console.log);
+}
+
 class VoterForm extends React.Component {
   
   componentDidMount(){
+    {importCountyElectionInformation()};
     fetch('https://www.googleapis.com/civicinfo/v2/voterinfo?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=1300%20Newning%20Ave.%20Austin%20TX&electionId=2000').then(function(response) {
       return response.json(); 
     }).then(function(j) {
@@ -90,7 +110,7 @@ class VoterForm extends React.Component {
     str += "My name is " + fname + " " + lname + " and my home address is:%0D%0A";
     str += street + "%0D%0A" + city + ", TX " + zip + "%0D%0A%0D%0A";
     str += "Thank you very much,%0D%0A" + fname + " " + lname + "%0D%0A";
-    window.open(str);
+    window.open(str, "_blank");
   }
 
   render() {
