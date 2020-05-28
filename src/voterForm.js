@@ -1,4 +1,5 @@
 import React from 'react';
+import Select from 'react-select';
 import logo from './texas_imprint.png';
 import './voterForm.css';
 import './Logo.css';
@@ -7,6 +8,65 @@ console.log(logo);
 
 function Header() {
   return <img src={logo} alt="Logo" className="center"/>;
+}
+
+class SelectInput extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      active: (props.locked && props.active) || false,
+      label: props.label || "Label",
+      name:  props.name || "menu",
+      selectedOption: null,
+    };
+  }
+
+//  handleChange(event) {
+//    const selectedOption = event.target.selectedOption;
+//    this.setState(
+//      { selectedOption },
+//      () => console.log(`Option selected:`, this.state.selectedOption)
+//    );
+//  };
+  handleChange = selectedOption => {
+    this.setState(
+      { selectedOption },
+      () => console.log(`Option selected:`, this.state.selectedOption)
+    );
+  };
+
+  render() {
+    const { active, label, name, selectedOption } = this.state;
+    const { predicted, locked } = this.props;
+    const fieldClassName = `field ${(locked ? active : active || selectedOption) &&
+      "active"} ${locked && !active && "locked"}`;
+
+    const options = [
+      { value: 'RequestBallot', label: 'Request an Application for Ballot by Mail' },
+      { value: 'FindMyReps', label: 'Find my representatives' },
+    ];
+
+    return (
+      <div className={fieldClassName}>
+        {active &&
+          selectedOption &&
+          predicted &&
+          predicted.includes(selectedOption) && <p className="predicted">{predicted}</p>}
+        <Select
+          id={1}
+          name={name}
+          type="text"
+          value={selectedOption}
+          placeholder={label}
+          onChange={this.handleChange.bind(this)}
+          onFocus={() => !locked && this.setState({ active: true })}
+          onBlur={() => !locked && this.setState({ active: false })}
+          options={options}
+        />
+      </div>
+    );
+  }
 }
 
 class TextInput extends React.Component {
@@ -78,7 +138,8 @@ async function getCivicInfo(voter_info) {
   const url_street = encodeURIComponent(voter_info.street);
   const url_city = encodeURIComponent(voter_info.city);
   const url_zip = encodeURIComponent(voter_info.zip);
-  const civic_api_request = 'https://www.googleapis.com/civicinfo/v2/voterinfo?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=' + url_street + '%20' + url_city + '%20' + voter_info.state + '&electionId=2000'; 
+  //const civic_api_request = 'https://www.googleapis.com/civicinfo/v2/voterinfo?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=' + url_street + '%20' + url_city + '%20' + voter_info.state + '&electionId=2000'; 
+  const civic_api_request = 'https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=' + url_street + '%20' + url_city + '%20' + voter_info.state + '&electionId=2000'; 
   console.log('Get Civic Info');
   console.log(civic_api_request);
   const civic_info = await fetch(civic_api_request).then(res => res.json()).catch(error => console.error('Error:', error)).then(function(response) {
@@ -166,6 +227,7 @@ class VoterForm extends React.Component {
         </div>
         <div className="Form">
         <form onSubmit={this.handleSubmit} method="get" encType="text/plain">
+          <SelectInput label="What do you want to do?" name="select"/>
           <TextInput label="First Name" name="fname"/>
           <TextInput label="Last Name" name="lname"/>
           <TextInput label="Street" name="street"/>
