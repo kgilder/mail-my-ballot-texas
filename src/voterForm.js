@@ -22,13 +22,6 @@ class SelectInput extends React.Component {
     };
   }
 
-//  handleChange(event) {
-//    const selectedOption = event.target.selectedOption;
-//    this.setState(
-//      { selectedOption },
-//      () => console.log(`Option selected:`, this.state.selectedOption)
-//    );
-//  };
   handleChange = selectedOption => {
     this.setState(
       { selectedOption },
