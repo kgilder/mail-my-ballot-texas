@@ -1,10 +1,12 @@
 import React from 'react';
 import Select from 'react-select';
 import logo from './texas_imprint.png';
+import noImage from './no-image-available2.png';
 import './voterForm.css';
 import './Logo.css';
 
 console.log(logo);
+console.log(noImage);
 
 function Header() {
   return <img src={logo} alt="Logo" className="center"/>;
@@ -117,45 +119,68 @@ class TextInput extends React.Component {
   }
 }
 
-function importCountyElectionInformation(){
-  //const excelToJson = require('convert-excel-to-json');
-  //const result = excelToJson({
-  //  sourceFile: '/src/election-duties-1.xlsx'
-  //});
-  //console.log(result);
+class Official extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      name:  props.name || '',
+      party: props.party || '',
+      office: props.office || '',
+      twitterHandle: props.twitterHandle || '',
+      photoUrl: props.photoUrl || '',
+    };
+    
+    this.getTwitterHandleString = this.getTwitterHandleString.bind(this);
+  }
+
+  getTwitterHandleString() {
+    var string = '';
+    string = this.twitterHandle?', @'+this.twitterHandle:'';
+    return string
+  }
+
+  render() {
+    const { name, party, office, twitterHandle, photoUrl } = this.state;
+    return (
+      <div class="official" name={name} id={name}>
+        <div class="official_left">
+          <img src={photoUrl} class="official_image"/>
+        </div>
+        <div class="official_right">
+          <h4>{name}</h4>
+          <div class="official_details">{office}, {party}{this.getTwitterHandleString}</div>
+        </div>
+      </div>
+    );
+  }
 }
 
-async function getCivicInfo(voter_info) {
-  const url_fname = encodeURIComponent(voter_info.fname);
-  const url_lname = encodeURIComponent(voter_info.lname);
-  const url_street = encodeURIComponent(voter_info.street);
-  const url_city = encodeURIComponent(voter_info.city);
-  const url_zip = encodeURIComponent(voter_info.zip);
-  //const civic_api_request = 'https://www.googleapis.com/civicinfo/v2/voterinfo?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=' + url_street + '%20' + url_city + '%20' + voter_info.state + '&electionId=2000'; 
-  const civic_api_request = 'https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=' + url_street + '%20' + url_city + '%20' + voter_info.state + '&electionId=2000'; 
-  console.log('Get Civic Info');
-  console.log(civic_api_request);
-  const civic_info = await fetch(civic_api_request).then(res => res.json()).catch(error => console.error('Error:', error)).then(function(response) {
-    console.log('Success');
-    return response;
-  });
-  console.log('Info:',civic_info); 
-  return civic_info.state[0].local_jurisdiction.name;
-}
-
-async function getVoterInfo(voterData) {
-  const data = await fetch('https://teamrv-mvp.sos.texas.gov/MVP/voterDetails.do', 
-    { method: 'POST', 
-      mode: 'no-cors', 
-      redirect: 'follow',
-      body: JSON.stringify(voterData),
-      headers: { 'Content-Type': 'application/json' }
-    }).then(res => res.json()).catch(error => console.error('Error:', error)).then(response => console.log('Success:',response));
+function getTwitterHandle(channels) {
+  var id = '';
+  if (channels) {
+  const accounts = new Array(channels);
+    accounts.forEach(account => {
+      account.forEach(a => {
+        if(a.type === 'Twitter'){
+          id = a.id;
+        }
+      });
+    });
+  }
+  return id;
 }
 
 class VoterForm extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      show_info: false,
+      divisions: [],
+      normalizedInput: [],
+      offices: [],
+      officials: [],
+    };
 
     this.voter_info = {
       selType: 'lfcd',
@@ -166,43 +191,47 @@ class VoterForm extends React.Component {
       state: 'TX',
       county: '',
       dob: '',
-      zip: ''
+      zip: '',
     };
 
-    this.componentDidMount = this.componentDidMount.bind(this);
+    this.handleBack = this.handleBack.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.getCivicInfo = this.getCivicInfo.bind(this);
   }
 
-  componentDidMount(){
-    //{importCountyElectionInformation()};
-//    fetch('https://www.googleapis.com/civicinfo/v2/voterinfo?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=1300%20Newning%20Ave.%20Austin%20TX&electionId=2000').then(function(response) {
-//      return response.json(); 
-//    }).then(function(j) {
-//      console.log(j);
-//      console.log(j.normalizedInput.line1 + ' ' + j.normalizedInput.city + ', ' + j.normalizedInput.state); 
-//      console.log(j.state[0].local_jurisdiction.name);
-//    }).catch(console.log);
+  getCivicInfo() {
+    const url_street = encodeURIComponent(this.voter_info.street);
+    const url_city = encodeURIComponent(this.voter_info.city);
+    const civic_api_request = 'https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyDATZ2arFUsfIjTF8CkufwKdUjH7fM5eVg&address=' + url_street + '%20' + url_city + '%20' + this.voter_info.state + '&electionId=2000'; 
+    console.log('Get Civic Info');
+    console.log(civic_api_request);
+    fetch(civic_api_request).then(res => res.json()).catch(error => console.error('Error:', error)).then(response => { 
+    console.log('Success', response);
+    this.setState({ divisions: response.divisions });
+    this.setState({ normalizedInput: response.normalizedInput });
+    this.setState({ offices: response.offices });
+    this.setState({ officials: response.officials });
+    return response; 
+    });
+  }
+
+  handleBack(event) {
+    event.preventDefault();
+    this.setState({ show_info: false });
   }
 
   handleSubmit(event) {
     event.preventDefault();
     const data = new FormData(event.target);
+    this.voter_info.select = data.get('select');
     this.voter_info.fname = data.get('fname');
     this.voter_info.fname = data.get('lname');
     this.voter_info.street = data.get('street');
     this.voter_info.city = data.get('city');
     this.voter_info.zip = data.get('zip');
+    this.setState({ show_info: true });
 
-    this.voter_info.county = getCivicInfo(this.voter_info);
-    console.log('County:',this.voter_info.county);
-    const voterData = {selType: 'lfcd',firstName: this.voter_info.fname, lastName: this.voter_info.lname, county: this.voter_info.county, dob: '11/19/1989', adZip5: this.voter_info.zip};
-    getVoterInfo(voterData);
-///      }).then(function(response) {
-///        
-///        return response.json();
-///      }).then(function(sos_data) {
-///        console.log(sos_data);
-///      }).catch(console.log);
+    this.getCivicInfo();
 //    var str = "mailto:dana.debeauvoir@traviscountytx.gov?subject=Request for Application for Ballot by Mail&body=";
 //    str += "I am writing this email to request to request an application for ballot by mail for the upcoming election.%0D%0A%0D%0A";
 //    str += "My name is " + fname + " " + lname + " and my home address is:%0D%0A";
@@ -211,28 +240,49 @@ class VoterForm extends React.Component {
 //    window.open(str, "_blank");
   }
   
-
   render() {
-    return (
-      <div>
-        <div className="Header">
-          <Header />
-        </div>
-        <div className="Form">
-        <form onSubmit={this.handleSubmit} method="get" encType="text/plain">
-          <SelectInput label="What do you want to do?" name="select"/>
-          <TextInput label="First Name" name="fname"/>
-          <TextInput label="Last Name" name="lname"/>
-          <TextInput label="Street" name="street"/>
-          <TextInput label="City" name="city"/>
-          <TextInput label="Zip Code" name="zip"/>
-          <div className="field">
-            <input type="submit" value="Submit" />
+    if(this.state.show_info === true && this.state.officials.length>0) {
+      const { show_info, divisions, normalizedInput, offices, officials} = this.state;
+      return (
+        <div>
+          <div className="Header">
+            <Header />
           </div>
-        </form>
+          <div className="field">
+            <input type="submit" onClick={this.handleBack} value="Back" />
+          </div>
+          <div className="officials">
+            {offices.map(office =>
+            <Official   name={officials[office.officialIndices[0]].name} 
+                        party={officials[office.officialIndices[0]].party} 
+                        office={office.name} 
+                        twitterHandle={getTwitterHandle(officials[office.officialIndices[0]].channels)} 
+                        photoUrl={officials[office.officialIndices[0]].photoUrl?officials[office.officialIndices[0]].photoUrl:noImage}  
+              />
+            )}
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <div>
+          <div className="Header">
+            <Header />
+          </div>
+          <div className="Form">
+          <form onSubmit={this.handleSubmit} method="get" encType="text/plain">
+            <SelectInput label="What do you want to do?" name="select"/>
+            <TextInput label="Street" name="street"/>
+            <TextInput label="City" name="city"/>
+            <TextInput label="Zip Code" name="zip"/>
+            <div className="field">
+              <input type="submit" value="Submit" />
+            </div>
+          </form>
+          </div>
+        </div>
+      );
+    }
   }
 }
 
